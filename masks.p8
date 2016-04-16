@@ -3,14 +3,35 @@ version 5
 __lua__
 --the masks we wear
 --by roe ((a)yepnix)
+
+function initobj(x,y,msga,msgb,rslta,rsltb,txtpos,sound)
+	local obj={}
+	obj.x=x
+	obj.y=y
+	obj.v=mget(x/8,y/8)
+	obj.msga=msga
+	obj.msgb=msgb
+	obj.rslta=rslta
+	obj.rsltb=rsltb
+	obj.txtpos=txtpos
+	obj.sound=sound
+	return obj
+end
+
 function _init()
  px=64
  py=64
  pdir=4
+ 
+ hifi=initobj(24,8,"this song reminds you of that\nalmost-perfect day in high\nschool.","when this song plays, you\ncan't help but think of last\nyear's big mistake.",-1,1,true,1)
+ 
  iswall=false
+ 
  maska=true
  maskb=false
  maskchamge=false
+ resultvis=false
+ 
  animt=0
 end
 
@@ -31,6 +52,24 @@ function collision(direction)
 	return iswall
 end
 
+function interactive(direction)
+	if (direction==1) then --get direction
+		v=mget((flr((px-4)/8)),py/8) --get which sprite facing
+		isobj=fget(v,1) --see if interactive
+	elseif (direction==2) then
+		v=mget((flr((px+8)/8)),py/8)
+		isobj=fget(v,1)
+	elseif (direction==3) then
+		v=mget(px/8,flr((py-4)/8))
+		isobj=fget(v,1)
+	elseif (direction==4) then
+		v=mget(px/8,flr((py+8)/8))
+		isobj=fget(v,1)
+	end
+	return isobj,v
+end
+
+
 function moveplayer()
 	if (btnp(0)) then --left
 		pdir=1 --sprite and interaction
@@ -48,6 +87,7 @@ function moveplayer()
 end
 
 function changemask()
+--sets flags for mask changes
 	if (btnp(5) and maska) then
 		maska=false
 		maskb=true
@@ -59,14 +99,54 @@ function changemask()
 	end
 end
 
+function interact(intobj)
+--calls functions dealing with
+--interactions
+	caninteract,objvalue=interactive(pdir)
+
+	if (btnp(4) and caninteract==true and objvalue==intobj.v) then
+		sfx(intobj.sound)	
+		if(maska) then
+--			showtext(intobj.msga,intobj.pos)
+			showresult(intobj.rslta)
+		elseif (maskb) then
+--			showtext(intobj.msgb,intobj.pos)
+			resultvis=true
+			showresult(intobj.rsltb)
+		end
+	end
+	
+end
+
+function showtext(msg,pos)
+--produces text box on screen
+end
+
+function showresult(rslt)
+--produces image related to 
+--result of interaction
+	if (resultvis==true) then
+		if (animt%30>0 and rslt==-1) then
+			spr(17,px+4,py-8)
+--		else
+--			resultvis=false
+		end
+	end
+end
+
+
+
 function _update()
 	moveplayer()
 	changemask()
+	interact(hifi)
 	animt+=1
 	if (animt==30) then animt=0 end
 end
 
 function drawpmask()
+--changes player colors based
+--on mask chosen
 	if (maska) then 
 		spr(pdir,px,py)
 	elseif (maskb) then
@@ -79,6 +159,8 @@ function drawpmask()
 end
 
 function drawworldmask()
+--changes interactive objects
+--based on mask chosen
 	if (maska) then
 		map(0,0,0,0,16,16,0x2)
 	elseif (maskb) then
@@ -96,6 +178,8 @@ function drawworldmask()
 end
 
 function animdanceflr()
+--randomly chooses colors for
+--dancefloor tiles
 	if (animt%15>7) then
 		pal(8,flr(rnd(5))+8)
 		pal(9,flr(rnd(5))+8)
@@ -115,7 +199,8 @@ function _draw()
 	animdanceflr() --dancefloor animation
 	drawpmask() --player
 	drawworldmask() --interactive environment
-	spr(36,60,120)
+	spr(36,60,120) --mood marker
+	interact(hifi)
 end
 __gfx__
 0000000000111100001111000011110000111100003333000022220000dddd000044440000000000000000000000000000000000000000000000000000000000
@@ -283,8 +368,8 @@ __map__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010100001d0701c0701c0701c07000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000c00003c6740c6743c6740c67400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
