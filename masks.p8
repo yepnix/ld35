@@ -30,7 +30,12 @@ function _init()
  
  hifi=initobj(24,8,"this song reminds you of that\nalmost-perfect day in high\nschool.","when this song plays, you\ncan't help but think of last\nyear's big mistake.",heart,skull,false,1)
  door=initobj(52,104,"leaving so soon?\nbutton 1-yeah...\nbutton 2-no...","ready to go?\nbutton 1-sure\nbutton 2-i guess not",0,0,true,2)
- objects={hifi,door}
+ table=initobj(96,96,"all the cheese is gone.","oh, look, one mini-quiche left!",skull,heart,true,3)
+	shon=initobj(16,64,"shon:\n	...","shon:\n	didn't know you had moves\n	like that!",skull,heart,true,4)
+	buba=initobj(40,8,"buba:\n	great! now the party\n	 can start!","buba:\n	who invited you?",heart,skull,false,5)
+	deid=initobj(112,40,"deid:\n	who picked this music?","deid:\n	don't you love this song?",skull,skull,false,6)
+	ryla=initobj(80,72,"ryla:\n	want to dance?","ryla:\n	want to ditch?",heart,heart,true,7)
+ objects={hifi,door,table,shon,buba,deid,ryla}
  
  iswall=false
  
@@ -39,8 +44,10 @@ function _init()
  maskchamge=false
  
  resultvis=false
+ resulttime=0
  textvis=false
  texttime=0
+ 
  
  activeobj=nil
  
@@ -50,6 +57,8 @@ function _init()
  animflr=0
  dancex=false
  dancey=false
+ 
+ state=0
 end
 
 function collision(direction)
@@ -105,14 +114,16 @@ end
 
 function changemask()
 --sets flags for mask changes
-	if (btnp(5) and maska) then
-		maska=false
-		maskb=true
-		maskchamge=true
-	elseif (btnp(5) and maskb) then
-		maska=true
-		maskb=false
-		maskchamge=true
+	if (not textvis) then
+		if (btnp(5) and maska) then
+			maska=false
+			maskb=true
+			maskchamge=true
+		elseif (btnp(5) and maskb) then
+			maska=true
+			maskb=false
+			maskchamge=true
+		end
 	end
 end
 
@@ -167,15 +178,17 @@ function showresult(intobj)
 --produces image related to 
 --result of interaction
 	if (resultvis==true) then
-		if (animt%30>0 and maska) then
+		if (resulttime%60>0 and maska) then
 			spr(intobj.rslta,px,py-12)
-		elseif (animt%30>0 and maskb) then
+		elseif (resulttime%60>0 and maskb) then
 			spr(intobj.rsltb,px,py-12)
 		else
 			resultvis=false
 		end
 	end
 	calcresult(intobj)
+	resulttime+=1
+	if (resulttime==60) then resulttime=0 end
 end
 
 function calcresult(intobj)
@@ -200,10 +213,33 @@ function showint(intobj)
 	showresult(intobj)
 end
 
-function _update()
+function endgame()
+	if (activeobj==door and textvis) then
+		if(btnp(4) and texttime>8) then
+			state=1
+		end
+	end
+end
+
+function updategame()
 	moveplayer()
 	changemask()
 	foreach(objects,interact)
+	endgame()
+end
+
+function updateover()
+	if (btnp(5)) then
+		_init()
+	end
+end
+
+function _update()
+	if (state==0) then
+		updategame()
+	elseif (state==1) then
+		updateover()
+	end
 end
 
 function drawpmask()
@@ -259,7 +295,7 @@ function animdanceflr()
 	if (animt==32) then animt=0 end
 end
 
-function _draw()
+function drawgame()
 	rectfill(0,0,128,128,0) --bg
 	map(0,0,0,0,16,16,0x0) --house
 	animdanceflr() --dancefloor
@@ -267,6 +303,26 @@ function _draw()
 	drawworldmask() --interactive environment
 	spr(36,markerx,markery) --mood marker
 	showint(activeobj) -- text and result for the current interaction
+end
+
+function drawover()
+	rectfill(0,0,128,128,0)
+	if (markerx<64) then
+		print("\"that was a good party.\"",0,16,7)
+	elseif (markerx>=64) then
+		print("\"maybe i'll stay home next time.\"",0,16,7)
+	end
+	print("button 2 to play again",0,80,7)
+	print("thanks for playing a game!\n	roe",0,96,7)
+	spr(17,0,106)
+end	
+
+function _draw()
+	if (state==0) then
+		drawgame()
+	elseif (state==1) then
+		drawover()
+	end
 end
 __gfx__
 0000000000111100001111000011110000111100003333000022220000dddd000044440000000000000000000000000000000000000000000000000000000000
