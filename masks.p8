@@ -38,9 +38,9 @@ function _init()
  
  resultvis=false
  textvis=false
- changemood=false
+ texttime=0
  
- textonscreen=0
+ changemood=false
  
  animt=0
 end
@@ -126,17 +126,32 @@ end
 function showtext(intobj)
 --produces text box on screen
 	if (textvis==true) then
+		texttime+=1
 			if(intobj.txttop and maska) then
 				rectfill(0,0,127,63,1)
 				rect(1,1,126,62,6)
 				print(intobj.msga,6,11,0)
-				print(intobj.msga,5,10,7)	
+				print(intobj.msga,5,10,7)
 			elseif (not intobj.txttop and maska) then 
-				rectfill(0,64,127,127,1)
-				rect(1,65,126,126,6)
+				rectfill(0,64,127,119,1)
+				rect(1,65,126,118,6)
 				print(intobj.msga,6,75,0)
 				print(intobj.msga,5,74,7)
+			elseif (intobj.txttop and maskb) then
+				rectfill(0,0,127,63,1)
+				rect(1,1,126,62,6)
+				print(intobj.msgb,6,11,0)
+				print(intobj.msgb,5,10,7)
+			elseif (not intobj.txttop and maskb) then 
+				rectfill(0,64,127,119,1)
+				rect(1,65,126,118,6)
+				print(intobj.msgb,6,75,0)
+				print(intobj.msgb,5,74,7)
 			end
+		if (texttime>4 and btnp(4)) then
+			textvis=false
+			texttime=0
+		end
 	end
 end
 
@@ -238,6 +253,7 @@ function _draw()
 	spr(36,markerx,markery) --mood marker
 	showresult(hifi)
 	showtext(hifi)
+	print(texttime,5,5,7)
 end
 __gfx__
 0000000000111100001111000011110000111100003333000022220000dddd000044440000000000000000000000000000000000000000000000000000000000
