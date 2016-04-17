@@ -4,7 +4,7 @@ __lua__
 --the masks we wear
 --by roe ((a)yepnix)
 
-function initobj(x,y,msga,msgb,rslta,rsltb,txtpos,sound)
+function initobj(x,y,msga,msgb,rslta,rsltb,txttop,sound)
 	local obj={}
 	obj.x=x
 	obj.y=y
@@ -13,7 +13,7 @@ function initobj(x,y,msga,msgb,rslta,rsltb,txtpos,sound)
 	obj.msgb=msgb
 	obj.rslta=rslta
 	obj.rsltb=rsltb
-	obj.txtpos=txtpos
+	obj.txttop=txttop
 	obj.sound=sound
 	return obj
 end
@@ -23,14 +23,24 @@ function _init()
  py=64
  pdir=4
  
- hifi=initobj(24,8,"this song reminds you of that\nalmost-perfect day in high\nschool.","when this song plays, you\ncan't help but think of last\nyear's big mistake.",-1,1,true,1)
+ heart=17
+ skull=18
+ markerx=60
+ markery=120
+ 
+ hifi=initobj(24,8,"this song reminds you of that\nalmost-perfect day in high\nschool.","when this song plays, you\ncan't help but think of last\nyear's big mistake.",heart,skull,false,1)
  
  iswall=false
  
  maska=true
  maskb=false
  maskchamge=false
+ 
  resultvis=false
+ textvis=false
+ changemood=false
+ 
+ textonscreen=0
  
  animt=0
 end
@@ -106,35 +116,61 @@ function interact(intobj)
 
 	if (btnp(4) and caninteract==true and objvalue==intobj.v) then
 		sfx(intobj.sound)	
-		if(maska) then
---			showtext(intobj.msga,intobj.pos)
-			showresult(intobj.rslta)
-		elseif (maskb) then
---			showtext(intobj.msgb,intobj.pos)
-			resultvis=true
-			showresult(intobj.rsltb)
-		end
+		resultvis=true
+		textvis=true
+		changemood=true
 	end
 	
 end
 
-function showtext(msg,pos)
+function showtext(intobj)
 --produces text box on screen
-end
-
-function showresult(rslt)
---produces image related to 
---result of interaction
-	if (resultvis==true) then
-		if (animt%30>0 and rslt==-1) then
-			spr(17,px+4,py-8)
---		else
---			resultvis=false
-		end
+	if (textvis==true) then
+			if(intobj.txttop and maska) then
+				rectfill(0,0,127,63,1)
+				rect(1,1,126,62,6)
+				print(intobj.msga,6,11,0)
+				print(intobj.msga,5,10,7)	
+			elseif (not intobj.txttop and maska) then 
+				rectfill(0,64,127,127,1)
+				rect(1,65,126,126,6)
+				print(intobj.msga,6,75,0)
+				print(intobj.msga,5,74,7)
+			end
 	end
 end
 
+function showresult(intobj)
+--produces image related to 
+--result of interaction
+	if (resultvis==true) then
+		if (animt%30>0 and maska) then
+			spr(intobj.rslta,px,py-12)
+		elseif (animt%30>0 and maskb) then
+			spr(intobj.rsltb,px,py-12)
+		else
+			resultvis=false
+		end
+	end
+	calcresult(intobj)
+end
 
+function calcresult(intobj)
+--calculates the result of 
+--interaction on meter
+	if (changemood) then
+		if (maska and intobj.rslta==heart) then
+			markerx=max(markerx-8,8)
+		elseif (maska and intobj.rslta==skull) then
+			markerx=min(markerx+8,112)
+		elseif (maskb and intobj.rsltb==heart) then
+			markerx=max(markerx-8,8)
+		elseif (maskb and intobj.rsltb==skull) then
+			markerx=min(markerx+8,112)
+		end
+		changemood=false
+	end
+end
 
 function _update()
 	moveplayer()
@@ -199,8 +235,9 @@ function _draw()
 	animdanceflr() --dancefloor animation
 	drawpmask() --player
 	drawworldmask() --interactive environment
-	spr(36,60,120) --mood marker
-	interact(hifi)
+	spr(36,markerx,markery) --mood marker
+	showresult(hifi)
+	showtext(hifi)
 end
 __gfx__
 0000000000111100001111000011110000111100003333000022220000dddd000044440000000000000000000000000000000000000000000000000000000000
